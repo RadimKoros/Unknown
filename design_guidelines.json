@@ -1,0 +1,151 @@
+{
+  "design_system": {
+    "identity": {
+      "name": "Vast Unknown",
+      "vibe": "Clinical Dreamscape",
+      "core_principles": [
+        "Fusion of Generative Art & Strategy",
+        "Negative Space as Active Participant",
+        "Light as the Default State",
+        "Interaction creates Deformation"
+      ]
+    },
+    "typography": {
+      "headings": {
+        "font_family": "Syne, sans-serif",
+        "weights": ["700", "800"],
+        "usage": "Title, Game Over Screen, Major Alerts",
+        "fallback": "Space Grotesk"
+      },
+      "body": {
+        "font_family": "Manrope, sans-serif",
+        "weights": ["400", "500", "600"],
+        "usage": "Instructions, HUD labels, Tooltips"
+      },
+      "mono": {
+        "font_family": "JetBrains Mono, monospace",
+        "weights": ["400"],
+        "usage": "Score, Time, Debug Stats"
+      }
+    },
+    "colors": {
+      "theme": "light",
+      "palette": {
+        "background": {
+          "primary": "#F9FAFB",
+          "canvas": "#FFFFFF",
+          "overlay": "rgba(255, 255, 255, 0.85)"
+        },
+        "foreground": {
+          "primary": "#18181B",
+          "secondary": "#52525B",
+          "muted": "#A1A1AA"
+        },
+        "accents": {
+          "known_stroke": "#000000",
+          "unknown_field": "#E2E8F0",
+          "tension_low": "#10B981",
+          "tension_med": "#F59E0B",
+          "tension_high": "#EF4444",
+          "highlight": "#3B82F6"
+        }
+      }
+    },
+    "layout": {
+      "structure": "Fullscreen Canvas with Floating HUD",
+      "grid": "None (Fluid/Organic)",
+      "spacing": "Generous (p-8 to p-12 for HUD elements)",
+      "z_index": {
+        "canvas": 0,
+        "overlay": 10,
+        "hud": 20,
+        "modal": 50
+      }
+    },
+    "components": {
+      "hud_container": {
+        "style": "glass_panel",
+        "classes": "bg-white/70 backdrop-blur-xl border border-white/20 shadow-lg rounded-2xl p-6"
+      },
+      "buttons": {
+        "primary": "rounded-full bg-black text-white hover:scale-105 transition-transform active:scale-95 px-6 py-3 font-bold tracking-tight",
+        "secondary": "rounded-full bg-white border border-gray-200 text-gray-900 hover:bg-gray-50 px-6 py-3 font-medium",
+        "icon": "p-3 rounded-full hover:bg-gray-100 transition-colors"
+      },
+      "complexity_meter": {
+        "type": "custom_svg_or_canvas",
+        "description": "A dynamic wobbling circle or fluid shape that distorts as complexity rises. Do not use a simple progress bar."
+      }
+    },
+    "visual_enhancers": {
+      "glassmorphism": "backdrop-blur-xl bg-white/60 border border-white/40 shadow-sm",
+      "shadows": "shadow-[0_8px_30px_rgb(0,0,0,0.04)]",
+      "gradients": "None. Use solid colors or very subtle mesh gradients for the 'unknown' field only.",
+      "borders": "1px solid rgba(0,0,0,0.06)"
+    },
+    "motion": {
+      "ui_transitions": "transition-all duration-300 ease-out",
+      "canvas_animations": "Fluid, physics-based, spring distortions",
+      "hover": "lift and glow"
+    },
+    "assets": {
+      "icons": "Phosphor Icons (Light weight) or Lucide (Stroke 1.5px)",
+      "libraries": [
+        "@react-three/fiber",
+        "@react-three/drei",
+        "framer-motion",
+        "zustand",
+        "simplex-noise"
+      ]
+    },
+    "accessibility": {
+      "contrast_check": "Ensure decorative 'unknown' elements do not obscure 'known' interactive elements.",
+      "reduced_motion": "Disable canvas turbulence if prefers-reduced-motion is true."
+    }
+  },
+  "implementation_steps": [
+    {
+      "step": 1,
+      "focus": "Setup Game Canvas",
+      "instruction": "Initialize React Three Fiber canvas. Create a 'Field' component using InstancedMesh or Points for the 'Unknown'. Create a 'Drawing' component for user input."
+    },
+    {
+      "step": 2,
+      "focus": "Drawing Interaction",
+      "instruction": "Implement raycasting to allow users to draw lines on the 2D plane within the 3D space. Store these paths as state."
+    },
+    {
+      "step": 3,
+      "focus": "Field Reaction (The Core Mechanic)",
+      "instruction": "Use a shader or frame loop to deform the 'Unknown' particles away from the 'Known' drawn lines. Calculate distance field."
+    },
+    {
+      "step": 4,
+      "focus": "Game Loop & Complexity",
+      "instruction": "Track total length/density of 'Knowns'. Update a global complexity score. Increase 'Unknown' aggression (speed/turbulence) as score rises."
+    },
+    {
+      "step": 5,
+      "focus": "UI Overlay",
+      "instruction": "Build the HUD using standard React + Tailwind. Overlay it on the Canvas. Connect it to the game state (score, reset, tools)."
+    }
+  ],
+  "image_urls": {
+    "textures": [
+      {
+        "category": "noise_texture",
+        "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop",
+        "description": "Subtle abstract texture for overlay if needed."
+      }
+    ]
+  },
+  "instructions_to_main_agent": "Focus on the 'feel' of the drawing. It should feel like cutting through water or ink spreading. The 'Unknown' should feel alive, not static. Use @react-three/fiber for the game view. Keep the UI extremely minimal—let the game breathe. Do NOT use dark mode. The game is strictly Light/Bright.",
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Don't make generic centered layouts.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur) for UI panels.",
+    "Every interaction needs micro-animations.",
+    "Use 2-3x more spacing than feels comfortable.",
+    "Never use AI assistant Emoji characters.",
+    "Prioritize using pre-existing components from src/components/ui when applicable."
+  ]
+}
