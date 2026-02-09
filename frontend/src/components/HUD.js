@@ -277,6 +277,15 @@ function HUD() {
                 </div>
               </div>
               
+              <button
+                onClick={handleExportImage}
+                className="w-full mb-3 rounded-full bg-white border border-zinc-200 text-zinc-900 hover:bg-zinc-50 px-8 py-4 text-lg font-medium font-['Syne'] transition-colors flex items-center justify-center gap-2"
+                data-testid="export-button"
+              >
+                <Download className="w-5 h-5" />
+                Export Image
+              </button>
+              
               <div className="flex gap-3">
                 <button
                   onClick={() => {
