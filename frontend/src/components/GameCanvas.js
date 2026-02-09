@@ -148,17 +148,17 @@ function DrawingLayer() {
       {allPaths.map((path, pathIndex) => {
         if (path.length < 2) return null;
         
-        const points = path.map(p => new THREE.Vector3(p.x, p.y, 0.1));
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        const points = path.map(p => [p.x, p.y, 0.1]);
         
         return (
-          <line key={pathIndex} geometry={geometry}>
-            <lineBasicMaterial 
-              color="#000000"
-              transparent
-              opacity={0.9}
-            />
-          </line>
+          <Line
+            key={pathIndex}
+            points={points}
+            color="#000000"
+            lineWidth={3}
+            transparent
+            opacity={0.9}
+          />
         );
       })}
     </>
