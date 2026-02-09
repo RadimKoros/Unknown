@@ -17,6 +17,10 @@ const useGameStore = create((set, get) => ({
   drawnPaths: [],
   currentPath: null,
   
+  // HUD state
+  hudMinimized: false,
+  hudPosition: { x: 0, y: 0 },
+  
   // Actions
   startGame: () => set({ 
     isPlaying: true, 
