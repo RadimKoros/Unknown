@@ -168,7 +168,7 @@ function HUD() {
               <div className="mb-6">
                 <Trophy className="w-16 h-16 text-black mx-auto mb-4" />
                 <h2 className="text-5xl font-bold text-black mb-2 font-['Syne']" data-testid="game-over-title">Overwhelmed</h2>
-                <p className="text-lg text-zinc-600 font-['Manrope']">The known consumed the unknown</p>
+                <p className="text-lg text-zinc-600 font-['Manrope']">The unknown emerged from the known</p>
               </div>
               
               <div className="space-y-4 mb-8 bg-zinc-50/50 rounded-2xl p-6">
