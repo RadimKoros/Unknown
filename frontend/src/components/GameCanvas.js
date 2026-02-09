@@ -130,41 +130,45 @@ function UnknownField() {
 }
 
 function DrawnLine({ path }) {
-  const lineObj = useMemo(() => {
-    if (path.length < 2) return null;
+  const lineRef = useRef();
+  
+  useEffect(() => {
+    if (!lineRef.current || path.length < 2) return;
     
     const points = path.map(p => new THREE.Vector3(p.x, p.y, 0.1));
-    const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    const material = new THREE.LineBasicMaterial({ 
-      color: 0x000000,
-      transparent: true,
-      opacity: 0.9
-    });
+    const newGeometry = new THREE.BufferGeometry().setFromPoints(points);
     
-    return new THREE.Line(geometry, material);
+    if (lineRef.current.geometry) {
+      lineRef.current.geometry.dispose();
+    }
+    lineRef.current.geometry = newGeometry;
   }, [path]);
   
-  if (!lineObj) return null;
+  if (path.length < 2) return null;
   
-  return <primitive object={lineObj} />;
+  return (
+    <line ref={lineRef}>
+      <bufferGeometry />
+      <lineBasicMaterial 
+        color={0x000000}
+        transparent
+        opacity={0.9}
+      />
+    </line>
+  );
 }
 
 function DrawingLayer() {
   const { drawnPaths, currentPath } = useGameStore();
   
-  const allPaths = useMemo(() => {
-    const paths = [...drawnPaths];
-    if (currentPath && currentPath.length > 1) {
-      paths.push(currentPath);
-    }
-    return paths;
-  }, [drawnPaths, currentPath]);
-  
   return (
     <>
-      {allPaths.map((path, pathIndex) => (
+      {drawnPaths.map((path, pathIndex) => (
         <DrawnLine key={pathIndex} path={path} />
       ))}
+      {currentPath && currentPath.length > 1 && (
+        <DrawnLine key="current" path={currentPath} />
+      )}
     </>
   );
 }
