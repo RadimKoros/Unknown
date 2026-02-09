@@ -76,7 +76,11 @@ const useGameStore = create((set, get) => ({
   
   clearCurrentPath: () => set({ currentPath: null }),
   
-  hideInstructions: () => set({ showInstructions: false })
+  hideInstructions: () => set({ showInstructions: false }),
+  
+  toggleHudMinimized: () => set((state) => ({ hudMinimized: !state.hudMinimized })),
+  
+  setHudPosition: (position) => set({ hudPosition: position })
 }));
 
 export default useGameStore;
