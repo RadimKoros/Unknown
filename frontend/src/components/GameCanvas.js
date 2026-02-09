@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Line } from '@react-three/drei';
 import { createNoise2D } from 'simplex-noise';
 import * as THREE from 'three';
 import useGameStore from '../stores/gameStore';
