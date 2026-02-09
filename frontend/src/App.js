@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import './App.css';
-import GameCanvas from './components/GameCanvas';
+import GameCanvas2D from './components/GameCanvas2D';
 import HUD from './components/HUD';
 import useGameStore from './stores/gameStore';
 import axios from 'axios';
@@ -32,7 +32,7 @@ function App() {
   
   return (
     <div className="App w-full h-screen overflow-hidden">
-      <GameCanvas />
+      <GameCanvas2D />
       <HUD />
     </div>
   );
