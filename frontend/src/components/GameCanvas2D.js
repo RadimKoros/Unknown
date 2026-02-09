@@ -27,6 +27,27 @@ function GameCanvas2D() {
     updateScore
   } = useGameStore();
   
+  // Export canvas function
+  useEffect(() => {
+    window.exportCanvas = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `vast-unknown-${Date.now()}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    };
+    
+    return () => {
+      delete window.exportCanvas;
+    };
+  }, []);
+  
   // Initialize particles
   useEffect(() => {
     const particles = [];
