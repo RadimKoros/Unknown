@@ -261,7 +261,7 @@ function GameCanvas() {
       >
         <ambientLight intensity={1} />
         <UnknownField />
-        <DrawingLayer />
+        {/* <DrawingLayer /> */}
         <DrawingInteraction />
       </Canvas>
     </div>
