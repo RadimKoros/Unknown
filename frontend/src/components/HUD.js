@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useGameStore from '../stores/gameStore';
 import ComplexityMeter from './ComplexityMeter';
-import { PlayCircle, PauseCircle, RotateCcw, Trophy } from 'lucide-react';
+import { PlayCircle, PauseCircle, RotateCcw, Trophy, Minimize2, Maximize2, Move, Download } from 'lucide-react';
 
 function HUD() {
   const {
@@ -18,8 +18,15 @@ function HUD() {
     resumeGame,
     resetGame,
     updateSurvivalTime,
-    hideInstructions
+    hideInstructions,
+    hudMinimized,
+    toggleHudMinimized,
+    hudPosition,
+    setHudPosition
   } = useGameStore();
+
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef({ startX: 0, startY: 0, initialX: 0, initialY: 0 });
 
   useEffect(() => {
     if (!isPlaying || isPaused) return;
@@ -41,6 +48,50 @@ function HUD() {
     startGame();
   };
 
+  const handleExportImage = () => {
+    if (window.exportCanvas) {
+      window.exportCanvas();
+    }
+  };
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      initialX: hudPosition.x,
+      initialY: hudPosition.y
+    };
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    
+    const deltaX = e.clientX - dragRef.current.startX;
+    const deltaY = e.clientY - dragRef.current.startY;
+    
+    setHudPosition({
+      x: dragRef.current.initialX + deltaX,
+      y: dragRef.current.initialY + deltaY
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging]);
+
   return (
     <>
       {/* Top HUD */}
@@ -48,27 +99,67 @@ function HUD() {
         {isPlaying && !isGameOver && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={{ 
+              opacity: 1, 
+              y: 0,
+              x: hudPosition.x,
+            }}
             exit={{ opacity: 0, y: -20 }}
             className="fixed top-8 left-1/2 -translate-x-1/2 z-20"
+            style={{ 
+              transform: `translate(calc(-50% + ${hudPosition.x}px), ${hudPosition.y}px)`,
+              cursor: isDragging ? 'grabbing' : 'default'
+            }}
             data-testid="top-hud"
           >
-            <div className="bg-white/70 backdrop-blur-xl border border-white/20 shadow-lg rounded-2xl px-8 py-4 flex items-center gap-8">
-              <div className="text-center">
-                <div className="text-sm font-medium text-zinc-600 font-['Manrope']">Score</div>
-                <div className="text-3xl font-bold text-black font-['JetBrains_Mono']" data-testid="score-display">{score}</div>
+            <div className="bg-white/70 backdrop-blur-xl border border-white/20 shadow-lg rounded-2xl overflow-hidden">
+              {/* Drag Handle */}
+              <div 
+                className="flex items-center justify-between px-4 py-2 bg-white/30 border-b border-white/20 cursor-grab active:cursor-grabbing"
+                onMouseDown={handleMouseDown}
+                data-testid="hud-drag-handle"
+              >
+                <Move className="w-4 h-4 text-zinc-400" />
+                <button
+                  onClick={toggleHudMinimized}
+                  className="p-1 rounded hover:bg-white/50 transition-colors"
+                  data-testid="hud-minimize-button"
+                >
+                  {hudMinimized ? (
+                    <Maximize2 className="w-4 h-4 text-zinc-600" />
+                  ) : (
+                    <Minimize2 className="w-4 h-4 text-zinc-600" />
+                  )}
+                </button>
               </div>
               
-              <div className="w-px h-12 bg-zinc-200" />
-              
-              <div className="text-center">
-                <div className="text-sm font-medium text-zinc-600 font-['Manrope']">Time</div>
-                <div className="text-3xl font-bold text-black font-['JetBrains_Mono']" data-testid="time-display">{survivalTime.toFixed(1)}s</div>
-              </div>
-              
-              <div className="w-px h-12 bg-zinc-200" />
-              
-              <ComplexityMeter complexity={complexity} />
+              {/* HUD Content */}
+              <AnimatePresence>
+                {!hudMinimized && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="px-8 py-4 flex items-center gap-8"
+                  >
+                    <div className="text-center">
+                      <div className="text-sm font-medium text-zinc-600 font-['Manrope']">Score</div>
+                      <div className="text-3xl font-bold text-black font-['JetBrains_Mono']" data-testid="score-display">{score}</div>
+                    </div>
+                    
+                    <div className="w-px h-12 bg-zinc-200" />
+                    
+                    <div className="text-center">
+                      <div className="text-sm font-medium text-zinc-600 font-['Manrope']">Time</div>
+                      <div className="text-3xl font-bold text-black font-['JetBrains_Mono']" data-testid="time-display">{survivalTime.toFixed(1)}s</div>
+                    </div>
+                    
+                    <div className="w-px h-12 bg-zinc-200" />
+                    
+                    <ComplexityMeter complexity={complexity} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         )}
