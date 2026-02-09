@@ -131,6 +131,26 @@ function UnknownField() {
   );
 }
 
+function DrawnLine({ path }) {
+  const lineObj = useMemo(() => {
+    if (path.length < 2) return null;
+    
+    const points = path.map(p => new THREE.Vector3(p.x, p.y, 0.1));
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    const material = new THREE.LineBasicMaterial({ 
+      color: 0x000000,
+      transparent: true,
+      opacity: 0.9
+    });
+    
+    return new THREE.Line(geometry, material);
+  }, [path]);
+  
+  if (!lineObj) return null;
+  
+  return <primitive object={lineObj} />;
+}
+
 function DrawingLayer() {
   const { drawnPaths, currentPath } = useGameStore();
   
@@ -144,22 +164,9 @@ function DrawingLayer() {
   
   return (
     <>
-      {allPaths.map((path, pathIndex) => {
-        if (path.length < 2) return null;
-        
-        const points = path.map(p => [p.x, p.y, 0.1]);
-        
-        return (
-          <Line
-            key={pathIndex}
-            points={points}
-            color="#000000"
-            lineWidth={3}
-            transparent
-            opacity={0.9}
-          />
-        );
-      })}
+      {allPaths.map((path, pathIndex) => (
+        <DrawnLine key={pathIndex} path={path} />
+      ))}
     </>
   );
 }
