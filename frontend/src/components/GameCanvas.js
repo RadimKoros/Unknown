@@ -153,8 +153,7 @@ function DrawingLayer() {
         return (
           <line key={pathIndex} geometry={geometry}>
             <lineBasicMaterial 
-              color="#000000" 
-              linewidth={2}
+              color="#000000"
               transparent
               opacity={0.9}
             />
