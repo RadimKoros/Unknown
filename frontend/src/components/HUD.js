@@ -172,7 +172,7 @@ function HUD() {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className="fixed bottom-8 right-8 z-20 flex gap-3"
+            className="fixed bottom-8 right-8 z-20 flex flex-col gap-3"
           >
             <button
               onClick={isPaused ? resumeGame : pauseGame}
@@ -184,6 +184,15 @@ function HUD() {
               ) : (
                 <PauseCircle className="w-6 h-6 text-black" />
               )}
+            </button>
+            
+            <button
+              onClick={handleExportImage}
+              className="p-4 rounded-full bg-white/70 backdrop-blur-xl border border-white/20 hover:bg-white/90 transition-all shadow-lg hover:scale-105 active:scale-95"
+              data-testid="export-button-gameplay"
+              title="Export current canvas"
+            >
+              <Download className="w-6 h-6 text-black" />
             </button>
             
             <button
