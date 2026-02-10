@@ -411,9 +411,15 @@ function GameCanvas2D() {
         
         if (distortedPath.length < 2) return;
         
-        // Vary line appearance based on decisiveness and complexity
+        // Vary line appearance based on complexity
         const complexityFactor = complexity / MAX_COMPLEXITY;
-        const alpha = 0.9 - (complexityFactor * 0.3 * (1 - metadata.decisiveness));
+        let alpha = 0.9;
+        
+        // Only fade at very high complexity
+        if (complexityFactor > 0.85) {
+          alpha = 0.9 - (complexityFactor - 0.85) * 2;
+        }
+        
         ctx.globalAlpha = alpha;
         
         // Draw the distorted path
@@ -423,8 +429,8 @@ function GameCanvas2D() {
         for (let i = 1; i < distortedPath.length; i++) {
           const point = distortedPath[i];
           
-          // Skip eroded points
-          if (point.eroded && Math.random() > 0.5) {
+          // Skip eroded points only at very high complexity
+          if (point.eroded && Math.random() > 0.3) {
             ctx.moveTo(point.x, point.y);
             continue;
           }
@@ -434,23 +440,39 @@ function GameCanvas2D() {
         
         ctx.stroke();
         ctx.globalAlpha = 1;
-        
-        // Draw glow effect for decisive lines at high complexity
-        if (metadata.decisiveness > 0.7 && complexityFactor > 0.5) {
-          ctx.strokeStyle = `rgba(239, 68, 68, ${complexityFactor * 0.3})`;
-          ctx.lineWidth = 4;
-          ctx.beginPath();
-          ctx.moveTo(distortedPath[0].x, distortedPath[0].y);
-          for (let i = 1; i < distortedPath.length; i++) {
-            if (!distortedPath[i].eroded) {
-              ctx.lineTo(distortedPath[i].x, distortedPath[i].y);
-            }
-          }
-          ctx.stroke();
-          ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 2;
-        }
       });
+      
+      // Draw unknown's response curves
+      ctx.strokeStyle = 'rgba(59, 130, 246, 0.6)'; // Blue tint for unknown's curves
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 5]); // Dashed to distinguish from user's lines
+      
+      unknownCurvesRef.current.forEach(curve => {
+        if (curve.points.length < 2 || curve.connected) return;
+        
+        // Pulsing effect
+        const pulse = 0.4 + Math.sin(time * 2 + curve.createdAt) * 0.2;
+        ctx.globalAlpha = pulse;
+        
+        ctx.beginPath();
+        ctx.moveTo(curve.points[0].x, curve.points[0].y);
+        
+        for (let i = 1; i < curve.points.length; i++) {
+          ctx.lineTo(curve.points[i].x, curve.points[i].y);
+        }
+        
+        ctx.stroke();
+        
+        // Draw connection point indicator
+        const endPoint = curve.points[curve.points.length - 1];
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.8)';
+        ctx.beginPath();
+        ctx.arc(endPoint.x, endPoint.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      
+      ctx.setLineDash([]); // Reset dash
+      ctx.globalAlpha = 1;
       
       animationFrameRef.current = requestAnimationFrame(animate);
     };
