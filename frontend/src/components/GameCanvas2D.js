@@ -113,15 +113,52 @@ function GameCanvas2D() {
     const handleEnd = (e) => {
       if (isDrawingRef.current && currentPath && currentPath.length > 1) {
         e.preventDefault();
-        addPath(currentPath);
+        
+        // Calculate path metadata for "decisiveness"
+        const pathLength = currentPath.length;
+        const startPoint = currentPath[0];
+        const endPoint = currentPath[currentPath.length - 1];
+        const straightLineDistance = Math.hypot(
+          endPoint.x - startPoint.x,
+          endPoint.y - startPoint.y
+        );
+        
+        // Calculate actual path distance
+        let actualDistance = 0;
+        for (let i = 1; i < currentPath.length; i++) {
+          actualDistance += Math.hypot(
+            currentPath[i].x - currentPath[i - 1].x,
+            currentPath[i].y - currentPath[i - 1].y
+          );
+        }
+        
+        // Decisiveness: straightness and speed
+        const straightness = straightLineDistance / Math.max(actualDistance, 1);
+        const speed = pathLength / Math.max(actualDistance, 1);
+        const decisiveness = straightness * Math.min(speed * 2, 1);
+        
+        // Store metadata
+        const pathId = Date.now() + Math.random();
+        pathMetadataRef.current.set(pathId, {
+          decisiveness,
+          createdAt: Date.now(),
+          intensity: decisiveness * (1 + complexity / 100)
+        });
+        
+        // Add path with metadata
+        const pathWithMeta = { points: currentPath, id: pathId };
+        addPath(pathWithMeta);
         
         // Calculate complexity
-        const totalPoints = drawnPaths.reduce((sum, path) => sum + path.length, 0) + currentPath.length;
+        const totalPoints = drawnPaths.reduce((sum, path) => 
+          sum + (path.points ? path.points.length : path.length), 0
+        ) + currentPath.length;
         const newComplexity = Math.min((totalPoints / 10), MAX_COMPLEXITY);
         updateComplexity(newComplexity);
         
-        // Award points
-        updateScore(currentPath.length);
+        // Award points with bonus for decisive lines
+        const bonus = Math.floor(decisiveness * 10);
+        updateScore(currentPath.length + bonus);
       }
       isDrawingRef.current = false;
     };
