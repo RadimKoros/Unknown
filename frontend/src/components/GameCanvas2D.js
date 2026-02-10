@@ -412,22 +412,24 @@ function GameCanvas2D() {
         ctx.fillRect(particle.x, particle.y, 2, 2);
       });
       
-      // Draw paths with distortion (but not the current path being drawn)
+      // Draw paths - use permanently distorted versions where they exist
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 2;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       
-      // Draw completed paths with distortion
+      // Draw completed paths (with permanent distortions)
       drawnPaths.forEach(pathObj => {
         const pathId = pathObj.id || 'legacy';
         const path = pathObj.points || pathObj;
-        const distortedPath = distortedPathsRef.current.get(pathId) || path;
-        const metadata = pathMetadataRef.current.get(pathId) || { decisiveness: 0.5 };
         
-        if (distortedPath.length < 2) return;
+        // Use distorted version if it exists, otherwise use original
+        const renderPath = distortedPathsRef.current.has(pathId) 
+          ? distortedPathsRef.current.get(pathId) 
+          : path;
         
-        // Vary line appearance based on complexity
+        if (renderPath.length < 2) return;
+        
         const complexityFactor = complexity / MAX_COMPLEXITY;
         let alpha = 0.9;
         
@@ -438,20 +440,32 @@ function GameCanvas2D() {
         
         ctx.globalAlpha = alpha;
         
-        // Draw the distorted path
+        // Draw the path (original or permanently distorted)
         ctx.beginPath();
-        ctx.moveTo(distortedPath[0].x, distortedPath[0].y);
         
-        for (let i = 1; i < distortedPath.length; i++) {
-          const point = distortedPath[i];
+        let isFirstPoint = true;
+        for (let i = 0; i < renderPath.length; i++) {
+          const point = renderPath[i];
+          const originalPoint = renderPath === path ? point : path[i];
+          
+          // Use distorted position if available, otherwise original
+          const x = point.x !== undefined ? point.x : originalPoint.x;
+          const y = point.y !== undefined ? point.y : originalPoint.y;
           
           // Skip eroded points only at very high complexity
           if (point.eroded && Math.random() > 0.3) {
-            ctx.moveTo(point.x, point.y);
+            if (i < renderPath.length - 1) {
+              isFirstPoint = true;
+            }
             continue;
           }
           
-          ctx.lineTo(point.x, point.y);
+          if (isFirstPoint) {
+            ctx.moveTo(x, y);
+            isFirstPoint = false;
+          } else {
+            ctx.lineTo(x, y);
+          }
         }
         
         ctx.stroke();
