@@ -299,16 +299,6 @@ function GameCanvas2D() {
         lastDistortionEventRef.current = time;
         console.log(`Unknown distorted line ${randomIndex}, segment ${startIdx}-${endIdx}`);
       }
-          
-          // Only erode at VERY high complexity (>85%)
-          if (complexityFactor > 0.85) {
-            const erosionChance = (complexityFactor - 0.85) * 0.15;
-            point.eroded = Math.random() < erosionChance;
-          } else {
-            point.eroded = false;
-          }
-        });
-      });
       
       // Generate unknown's response curves at intervals
       if (time - lastCurveGenerationRef.current > 3 && complexity > 20 && complexity < 90) {
