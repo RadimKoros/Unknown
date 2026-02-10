@@ -29,10 +29,11 @@ function GameCanvas2D() {
     updateScore
   } = useGameStore();
   
-  const distortedPathsRef = useRef(new Map()); // Store distorted versions of paths
+  const distortedPathsRef = useRef(new Map()); // Store permanently distorted versions of paths
   const pathMetadataRef = useRef(new Map()); // Store metadata about each path
   const unknownCurvesRef = useRef([]); // Curves created by the unknown field
   const lastCurveGenerationRef = useRef(0);
+  const lastDistortionEventRef = useRef(0); // Track when last distortion event occurred
   
   // Export canvas function
   useEffect(() => {
