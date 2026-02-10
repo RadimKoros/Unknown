@@ -234,8 +234,8 @@ function GameCanvas2D() {
         allPaths.push({ points: currentPath, id: 'current' });
       }
       
-      // Create distorted versions of paths based on complexity and particle proximity
-      allPaths.forEach(pathObj => {
+      // Create distorted versions of paths based on complexity (only for completed paths)
+      const completedPaths = drawnPaths;
         const path = pathObj.points || pathObj;
         const pathId = pathObj.id || 'legacy';
         const metadata = pathMetadataRef.current.get(pathId) || { decisiveness: 0.5, intensity: 0.5 };
