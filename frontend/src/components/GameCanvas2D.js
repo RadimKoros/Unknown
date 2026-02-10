@@ -69,30 +69,47 @@ function GameCanvas2D() {
     const canvas = canvasRef.current;
     if (!canvas || !isPlaying || isPaused) return;
     
-    const handleMouseDown = (e) => {
-      isDrawingRef.current = true;
+    const getPosition = (e) => {
       const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      setCurrentPath([{ x, y }]);
+      
+      // Handle touch events
+      if (e.touches && e.touches.length > 0) {
+        return {
+          x: e.touches[0].clientX - rect.left,
+          y: e.touches[0].clientY - rect.top
+        };
+      }
+      
+      // Handle mouse events
+      return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
     };
     
-    const handleMouseMove = (e) => {
+    const handleStart = (e) => {
+      e.preventDefault();
+      isDrawingRef.current = true;
+      const pos = getPosition(e);
+      setCurrentPath([pos]);
+    };
+    
+    const handleMove = (e) => {
       if (!isDrawingRef.current) return;
+      e.preventDefault();
       
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      
+      const pos = getPosition(e);
       const path = currentPath || [];
+      
       if (path.length === 0 || 
-          Math.hypot(x - path[path.length - 1].x, y - path[path.length - 1].y) > 5) {
-        setCurrentPath([...path, { x, y }]);
+          Math.hypot(pos.x - path[path.length - 1].x, pos.y - path[path.length - 1].y) > 3) {
+        setCurrentPath([...path, pos]);
       }
     };
     
-    const handleMouseUp = () => {
+    const handleEnd = (e) => {
       if (isDrawingRef.current && currentPath && currentPath.length > 1) {
+        e.preventDefault();
         addPath(currentPath);
         
         // Calculate complexity
@@ -106,16 +123,28 @@ function GameCanvas2D() {
       isDrawingRef.current = false;
     };
     
-    canvas.addEventListener('mousedown', handleMouseDown);
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mouseup', handleMouseUp);
-    canvas.addEventListener('mouseleave', handleMouseUp);
+    // Mouse events
+    canvas.addEventListener('mousedown', handleStart);
+    canvas.addEventListener('mousemove', handleMove);
+    canvas.addEventListener('mouseup', handleEnd);
+    canvas.addEventListener('mouseleave', handleEnd);
+    
+    // Touch events
+    canvas.addEventListener('touchstart', handleStart, { passive: false });
+    canvas.addEventListener('touchmove', handleMove, { passive: false });
+    canvas.addEventListener('touchend', handleEnd, { passive: false });
+    canvas.addEventListener('touchcancel', handleEnd, { passive: false });
     
     return () => {
-      canvas.removeEventListener('mousedown', handleMouseDown);
-      canvas.removeEventListener('mousemove', handleMouseMove);
-      canvas.removeEventListener('mouseup', handleMouseUp);
-      canvas.removeEventListener('mouseleave', handleMouseUp);
+      canvas.removeEventListener('mousedown', handleStart);
+      canvas.removeEventListener('mousemove', handleMove);
+      canvas.removeEventListener('mouseup', handleEnd);
+      canvas.removeEventListener('mouseleave', handleEnd);
+      
+      canvas.removeEventListener('touchstart', handleStart);
+      canvas.removeEventListener('touchmove', handleMove);
+      canvas.removeEventListener('touchend', handleEnd);
+      canvas.removeEventListener('touchcancel', handleEnd);
     };
   }, [isPlaying, isPaused, currentPath, drawnPaths]);
   
