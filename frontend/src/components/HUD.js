@@ -115,8 +115,16 @@ function HUD() {
             <div className="bg-white/70 backdrop-blur-xl border border-white/20 shadow-lg rounded-2xl overflow-hidden">
               {/* Drag Handle */}
               <div 
-                className="flex items-center justify-between px-4 py-2 bg-white/30 border-b border-white/20 cursor-grab active:cursor-grabbing"
+                className="flex items-center justify-between px-4 py-2 bg-white/30 border-b border-white/20 cursor-grab active:cursor-grabbing touch-none"
                 onMouseDown={handleMouseDown}
+                onTouchStart={(e) => {
+                  const touch = e.touches[0];
+                  const mouseEvent = new MouseEvent('mousedown', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                  });
+                  handleMouseDown(mouseEvent);
+                }}
                 data-testid="hud-drag-handle"
               >
                 <Move className="w-4 h-4 text-zinc-400" />
@@ -140,21 +148,21 @@ function HUD() {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="px-8 py-4 flex items-center gap-8"
+                    className="px-4 sm:px-8 py-4 flex items-center gap-4 sm:gap-8 flex-wrap sm:flex-nowrap"
                   >
                     <div className="text-center">
-                      <div className="text-sm font-medium text-zinc-600 font-['Manrope']">Score</div>
-                      <div className="text-3xl font-bold text-black font-['JetBrains_Mono']" data-testid="score-display">{score}</div>
+                      <div className="text-xs sm:text-sm font-medium text-zinc-600 font-['Manrope']">Score</div>
+                      <div className="text-2xl sm:text-3xl font-bold text-black font-['JetBrains_Mono']" data-testid="score-display">{score}</div>
                     </div>
                     
-                    <div className="w-px h-12 bg-zinc-200" />
+                    <div className="w-px h-8 sm:h-12 bg-zinc-200" />
                     
                     <div className="text-center">
-                      <div className="text-sm font-medium text-zinc-600 font-['Manrope']">Time</div>
-                      <div className="text-3xl font-bold text-black font-['JetBrains_Mono']" data-testid="time-display">{survivalTime.toFixed(1)}s</div>
+                      <div className="text-xs sm:text-sm font-medium text-zinc-600 font-['Manrope']">Time</div>
+                      <div className="text-2xl sm:text-3xl font-bold text-black font-['JetBrains_Mono']" data-testid="time-display">{survivalTime.toFixed(1)}s</div>
                     </div>
                     
-                    <div className="w-px h-12 bg-zinc-200" />
+                    <div className="w-px h-8 sm:h-12 bg-zinc-200" />
                     
                     <ComplexityMeter complexity={complexity} />
                   </motion.div>
