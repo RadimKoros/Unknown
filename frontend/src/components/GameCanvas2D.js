@@ -236,8 +236,13 @@ function GameCanvas2D() {
       
       // Create distorted versions of paths based on complexity (only for completed paths)
       const completedPaths = drawnPaths;
+      const complexityFactor = complexity / MAX_COMPLEXITY;
       
-      completedPaths.forEach(pathObj => {
+      // At low complexity, only distort a subset of paths
+      const pathsToDistort = Math.max(1, Math.ceil(completedPaths.length * (0.3 + complexityFactor * 0.7)));
+      const pathsToProcess = completedPaths.slice(-pathsToDistort); // Distort most recent paths
+      
+      pathsToProcess.forEach(pathObj => {
         const path = pathObj.points || pathObj;
         const pathId = pathObj.id || 'legacy';
         const metadata = pathMetadataRef.current.get(pathId) || { decisiveness: 0.5, intensity: 0.5 };
@@ -249,43 +254,49 @@ function GameCanvas2D() {
         const distortedPath = distortedPathsRef.current.get(pathId);
         
         // Apply unknown's influence based on complexity level
-        const complexityFactor = complexity / MAX_COMPLEXITY;
+        // MUCH MORE DRAMATIC CURVES
         
-        // Low-Medium complexity (0-60%): Gentle curving and bending
-        // High complexity (60-85%): Stronger distortions
+        // Low-Medium complexity (0-60%): Dramatic curving and bending
+        // High complexity (60-85%): Even stronger distortions
         // Very high (85%+): Erosion and flickering
         
         let distortionStrength = 0;
         if (complexityFactor < 0.6) {
-          // Gentle modifications
-          distortionStrength = complexityFactor * 0.3;
+          // More dramatic from the start
+          distortionStrength = complexityFactor * 1.5;
         } else if (complexityFactor < 0.85) {
-          // Stronger but still smooth
-          distortionStrength = 0.3 + (complexityFactor - 0.6) * 1.5;
+          // Much stronger
+          distortionStrength = 0.9 + (complexityFactor - 0.6) * 2.5;
         } else {
-          // Dramatic effects
-          distortionStrength = 1.0;
+          // Maximum drama
+          distortionStrength = 2.5;
         }
         
-        const resistance = 1 - (metadata.decisiveness * 0.3);
+        const resistance = 1 - (metadata.decisiveness * 0.2);
         
         distortedPath.forEach((point, idx) => {
           const originalPoint = path[idx];
           if (!originalPoint) return;
           
-          // Smooth wave-like distortion
-          const waveX = Math.sin(idx * 0.1 + time * 0.5) * distortionStrength * 15;
-          const waveY = Math.cos(idx * 0.15 + time * 0.5) * distortionStrength * 10;
+          // Much more dramatic wave-like distortion
+          const waveAmplitude = 40 * distortionStrength; // Increased from 15
+          const waveFrequency = 0.08; // Slower, longer waves
+          const waveX = Math.sin(idx * waveFrequency + time * 0.5) * waveAmplitude;
+          const waveY = Math.cos(idx * waveFrequency * 1.3 + time * 0.5) * waveAmplitude * 0.8;
           
-          // Noise-based organic movement
+          // Add secondary wave for more complex curves
+          const wave2X = Math.sin(idx * waveFrequency * 2 + time * 0.3) * waveAmplitude * 0.5;
+          const wave2Y = Math.cos(idx * waveFrequency * 2.5 + time * 0.3) * waveAmplitude * 0.4;
+          
+          // Noise-based organic movement (also increased)
           const noiseDistortion = noiseRef.current(
             originalPoint.x * 0.01 + time * 0.3, 
             originalPoint.y * 0.01
-          ) * distortionStrength * 20;
+          ) * distortionStrength * 35; // Increased from 20
           
-          // Apply distortion
-          point.x = originalPoint.x + (waveX + noiseDistortion * 0.7) * resistance;
-          point.y = originalPoint.y + (waveY + noiseDistortion) * resistance;
+          // Apply dramatic distortion
+          point.x = originalPoint.x + (waveX + wave2X + noiseDistortion * 0.7) * resistance;
+          point.y = originalPoint.y + (waveY + wave2Y + noiseDistortion) * resistance;
           
           // Only erode at VERY high complexity (>85%)
           if (complexityFactor > 0.85) {
