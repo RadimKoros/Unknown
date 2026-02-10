@@ -27,6 +27,9 @@ function GameCanvas2D() {
     updateScore
   } = useGameStore();
   
+  const distortedPathsRef = useRef(new Map()); // Store distorted versions of paths
+  const pathMetadataRef = useRef(new Map()); // Store metadata about each path
+  
   // Export canvas function
   useEffect(() => {
     window.exportCanvas = () => {
