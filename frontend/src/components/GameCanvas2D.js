@@ -287,7 +287,10 @@ function GameCanvas2D() {
         let influenced = false;
         
         // Repulsion from drawn paths
-        allPaths.forEach(path => {
+        allPaths.forEach(pathObj => {
+          const path = pathObj.points || pathObj;
+          const metadata = pathMetadataRef.current.get(pathObj.id) || { decisiveness: 0.5 };
+          
           path.forEach(point => {
             const dx = particle.x - point.x;
             const dy = particle.y - point.y;
@@ -295,9 +298,19 @@ function GameCanvas2D() {
             
             if (distance < INFLUENCE_RADIUS && distance > 1) {
               influenced = true;
-              const force = (1 - distance / INFLUENCE_RADIUS) * 5;
+              
+              // Decisive lines push particles harder
+              const pushMultiplier = 1 + metadata.decisiveness;
+              const force = (1 - distance / INFLUENCE_RADIUS) * 5 * pushMultiplier;
               totalForceX += (dx / distance) * force;
               totalForceY += (dy / distance) * force;
+              
+              // At high complexity, particles become more chaotic near decisive lines
+              if (complexity > 50 && metadata.decisiveness > 0.7) {
+                const chaos = (Math.random() - 0.5) * 0.2 * (complexity / 100);
+                totalForceX += chaos;
+                totalForceY += chaos;
+              }
             }
           });
         });
