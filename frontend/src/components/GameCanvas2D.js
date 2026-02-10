@@ -246,55 +246,101 @@ function GameCanvas2D() {
         
         const distortedPath = distortedPathsRef.current.get(pathId);
         
-        // Apply unknown's influence on the known lines
+        // Apply unknown's influence based on complexity level
         const complexityFactor = complexity / MAX_COMPLEXITY;
-        const backLashStrength = complexityFactor * metadata.intensity * 0.5;
+        
+        // Low-Medium complexity (0-60%): Gentle curving and bending
+        // High complexity (60-85%): Stronger distortions
+        // Very high (85%+): Erosion and flickering
+        
+        let distortionStrength = 0;
+        if (complexityFactor < 0.6) {
+          // Gentle modifications
+          distortionStrength = complexityFactor * 0.3;
+        } else if (complexityFactor < 0.85) {
+          // Stronger but still smooth
+          distortionStrength = 0.3 + (complexityFactor - 0.6) * 1.5;
+        } else {
+          // Dramatic effects
+          distortionStrength = 1.0;
+        }
+        
+        const resistance = 1 - (metadata.decisiveness * 0.3);
         
         distortedPath.forEach((point, idx) => {
           const originalPoint = path[idx];
           if (!originalPoint) return;
           
-          // Calculate particle density around this point
-          let nearbyParticles = 0;
-          let forceX = 0;
-          let forceY = 0;
+          // Smooth wave-like distortion
+          const waveX = Math.sin(idx * 0.1 + time * 0.5) * distortionStrength * 15;
+          const waveY = Math.cos(idx * 0.15 + time * 0.5) * distortionStrength * 10;
           
-          particlesRef.current.forEach(particle => {
-            const dx = particle.x - originalPoint.x;
-            const dy = particle.y - originalPoint.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            
-            if (distance < INFLUENCE_RADIUS * 0.8) {
-              nearbyParticles++;
-              // Particles push the line points
-              const pushForce = (1 - distance / (INFLUENCE_RADIUS * 0.8)) * backLashStrength;
-              forceX -= (dx / distance) * pushForce * 2;
-              forceY -= (dy / distance) * pushForce * 2;
-            }
-          });
-          
-          // Add noise-based distortion (unknown's chaos)
+          // Noise-based organic movement
           const noiseDistortion = noiseRef.current(
-            originalPoint.x * 0.01 + time * 0.5, 
+            originalPoint.x * 0.01 + time * 0.3, 
             originalPoint.y * 0.01
-          ) * backLashStrength * 30;
-          
-          // Decisive lines resist more, but still get affected
-          const resistance = 1 - (metadata.decisiveness * 0.5);
+          ) * distortionStrength * 20;
           
           // Apply distortion
-          point.x = originalPoint.x + (forceX + noiseDistortion) * resistance;
-          point.y = originalPoint.y + (forceY + noiseDistortion * 0.5) * resistance;
+          point.x = originalPoint.x + (waveX + noiseDistortion * 0.7) * resistance;
+          point.y = originalPoint.y + (waveY + noiseDistortion) * resistance;
           
-          // Add erosion effect at high complexity
-          if (complexityFactor > 0.6) {
-            const erosion = Math.random() < complexityFactor * 0.1;
-            if (erosion) {
-              point.eroded = true;
-            }
+          // Only erode at VERY high complexity (>85%)
+          if (complexityFactor > 0.85) {
+            const erosionChance = (complexityFactor - 0.85) * 0.15;
+            point.eroded = Math.random() < erosionChance;
+          } else {
+            point.eroded = false;
           }
         });
       });
+      
+      // Generate unknown's response curves at intervals
+      if (time - lastCurveGenerationRef.current > 3 && complexity > 20 && complexity < 90) {
+        const complexityFactor = complexity / MAX_COMPLEXITY;
+        
+        // Pick a random existing path to extend from
+        if (allPaths.length > 0 && Math.random() < complexityFactor * 0.4) {
+          const randomPathObj = allPaths[Math.floor(Math.random() * allPaths.length)];
+          const randomPath = randomPathObj.points || randomPathObj;
+          
+          if (randomPath.length > 5) {
+            // Pick a point to branch from (prefer middle-to-end sections)
+            const branchIdx = Math.floor(randomPath.length * (0.3 + Math.random() * 0.5));
+            const branchPoint = randomPath[branchIdx];
+            
+            // Create a curved extension
+            const curvePoints = [{ ...branchPoint }];
+            const curveLength = 5 + Math.floor(Math.random() * 8);
+            const angleOffset = (Math.random() - 0.5) * Math.PI * 0.8;
+            
+            for (let i = 1; i <= curveLength; i++) {
+              const t = i / curveLength;
+              const angle = angleOffset + Math.sin(t * Math.PI) * 0.5;
+              const distance = t * 80 * (0.5 + complexityFactor * 0.5);
+              
+              curvePoints.push({
+                x: branchPoint.x + Math.cos(angle) * distance,
+                y: branchPoint.y + Math.sin(angle) * distance
+              });
+            }
+            
+            unknownCurvesRef.current.push({
+              points: curvePoints,
+              createdAt: time,
+              connected: false,
+              intensity: complexityFactor
+            });
+            
+            lastCurveGenerationRef.current = time;
+          }
+        }
+      }
+      
+      // Clean up old connected curves
+      unknownCurvesRef.current = unknownCurvesRef.current.filter(curve => 
+        !curve.connected || (time - curve.createdAt < 5)
+      );
       
       particlesRef.current.forEach(particle => {
         // Noise-based movement
