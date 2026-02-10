@@ -82,12 +82,33 @@ function HUD() {
 
   useEffect(() => {
     if (isDragging) {
+      const handleTouchMove = (e) => {
+        if (!isDragging) return;
+        
+        const touch = e.touches[0];
+        const deltaX = touch.clientX - dragRef.current.startX;
+        const deltaY = touch.clientY - dragRef.current.startY;
+        
+        setHudPosition({
+          x: dragRef.current.initialX + deltaX,
+          y: dragRef.current.initialY + deltaY
+        });
+      };
+      
+      const handleTouchEnd = () => {
+        setIsDragging(false);
+      };
+      
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('touchmove', handleTouchMove, { passive: false });
+      window.addEventListener('touchend', handleTouchEnd);
       
       return () => {
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
+        window.removeEventListener('touchmove', handleTouchMove);
+        window.removeEventListener('touchend', handleTouchEnd);
       };
     }
   }, [isDragging]);
