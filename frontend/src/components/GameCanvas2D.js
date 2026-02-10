@@ -397,13 +397,14 @@ function GameCanvas2D() {
         ctx.fillRect(particle.x, particle.y, 2, 2);
       });
       
-      // Draw paths with distortion
+      // Draw paths with distortion (but not the current path being drawn)
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 2;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       
-      allPaths.forEach(pathObj => {
+      // Draw completed paths with distortion
+      drawnPaths.forEach(pathObj => {
         const pathId = pathObj.id || 'legacy';
         const path = pathObj.points || pathObj;
         const distortedPath = distortedPathsRef.current.get(pathId) || path;
@@ -441,6 +442,22 @@ function GameCanvas2D() {
         ctx.stroke();
         ctx.globalAlpha = 1;
       });
+      
+      // Draw current path being drawn (NO distortion for immediate feedback)
+      if (currentPath && currentPath.length > 1) {
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 1;
+        
+        ctx.beginPath();
+        ctx.moveTo(currentPath[0].x, currentPath[0].y);
+        
+        for (let i = 1; i < currentPath.length; i++) {
+          ctx.lineTo(currentPath[i].x, currentPath[i].y);
+        }
+        
+        ctx.stroke();
+      }
       
       // Draw unknown's response curves
       ctx.strokeStyle = 'rgba(59, 130, 246, 0.6)'; // Blue tint for unknown's curves
