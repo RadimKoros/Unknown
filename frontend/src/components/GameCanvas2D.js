@@ -331,21 +331,59 @@ function GameCanvas2D() {
         ctx.fillRect(particle.x, particle.y, 2, 2);
       });
       
-      // Draw paths
+      // Draw paths with distortion
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 2;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       
-      allPaths.forEach(path => {
-        if (path.length < 2) return;
+      allPaths.forEach(pathObj => {
+        const pathId = pathObj.id || 'legacy';
+        const path = pathObj.points || pathObj;
+        const distortedPath = distortedPathsRef.current.get(pathId) || path;
+        const metadata = pathMetadataRef.current.get(pathId) || { decisiveness: 0.5 };
         
+        if (distortedPath.length < 2) return;
+        
+        // Vary line appearance based on decisiveness and complexity
+        const complexityFactor = complexity / MAX_COMPLEXITY;
+        const alpha = 0.9 - (complexityFactor * 0.3 * (1 - metadata.decisiveness));
+        ctx.globalAlpha = alpha;
+        
+        // Draw the distorted path
         ctx.beginPath();
-        ctx.moveTo(path[0].x, path[0].y);
-        for (let i = 1; i < path.length; i++) {
-          ctx.lineTo(path[i].x, path[i].y);
+        ctx.moveTo(distortedPath[0].x, distortedPath[0].y);
+        
+        for (let i = 1; i < distortedPath.length; i++) {
+          const point = distortedPath[i];
+          
+          // Skip eroded points
+          if (point.eroded && Math.random() > 0.5) {
+            ctx.moveTo(point.x, point.y);
+            continue;
+          }
+          
+          ctx.lineTo(point.x, point.y);
         }
+        
         ctx.stroke();
+        ctx.globalAlpha = 1;
+        
+        // Draw glow effect for decisive lines at high complexity
+        if (metadata.decisiveness > 0.7 && complexityFactor > 0.5) {
+          ctx.strokeStyle = `rgba(239, 68, 68, ${complexityFactor * 0.3})`;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(distortedPath[0].x, distortedPath[0].y);
+          for (let i = 1; i < distortedPath.length; i++) {
+            if (!distortedPath[i].eroded) {
+              ctx.lineTo(distortedPath[i].x, distortedPath[i].y);
+            }
+          }
+          ctx.stroke();
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 2;
+        }
       });
       
       animationFrameRef.current = requestAnimationFrame(animate);
