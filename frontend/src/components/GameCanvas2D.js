@@ -235,69 +235,70 @@ function GameCanvas2D() {
         allPaths.push({ points: currentPath, id: 'current' });
       }
       
-      // Create distorted versions of paths based on complexity (only for completed paths)
+      // Create distorted versions of paths - PERMANENT changes triggered randomly
       const completedPaths = drawnPaths;
       const complexityFactor = complexity / MAX_COMPLEXITY;
       
-      // At low complexity, only distort a subset of paths
-      const pathsToDistort = Math.max(1, Math.ceil(completedPaths.length * (0.3 + complexityFactor * 0.7)));
-      const pathsToProcess = completedPaths.slice(-pathsToDistort); // Distort most recent paths
+      // Trigger random distortion events based on complexity
+      const distortionInterval = Math.max(1, 5 - complexityFactor * 4); // More frequent at high complexity
       
-      pathsToProcess.forEach(pathObj => {
+      if (time - lastDistortionEventRef.current > distortionInterval && completedPaths.length > 0) {
+        // Pick a random line to distort
+        const randomIndex = Math.floor(Math.random() * completedPaths.length);
+        const pathObj = completedPaths[randomIndex];
         const path = pathObj.points || pathObj;
         const pathId = pathObj.id || 'legacy';
         const metadata = pathMetadataRef.current.get(pathId) || { decisiveness: 0.5, intensity: 0.5 };
         
+        // Initialize distorted path if needed
         if (!distortedPathsRef.current.has(pathId)) {
-          distortedPathsRef.current.set(pathId, path.map(p => ({ ...p })));
+          distortedPathsRef.current.set(pathId, path.map(p => ({ ...p, distorted: false })));
         }
         
         const distortedPath = distortedPathsRef.current.get(pathId);
         
-        // Apply unknown's influence based on complexity level
-        // MUCH MORE DRAMATIC CURVES
+        // Pick a random segment of the line (not the whole line)
+        const segmentLength = Math.floor(path.length * (0.2 + Math.random() * 0.4)); // 20-60% of line
+        const startIdx = Math.floor(Math.random() * Math.max(1, path.length - segmentLength));
+        const endIdx = Math.min(startIdx + segmentLength, path.length);
         
-        // Low-Medium complexity (0-60%): Dramatic curving and bending
-        // High complexity (60-85%): Even stronger distortions
-        // Very high (85%+): Erosion and flickering
-        
-        let distortionStrength = 0;
-        if (complexityFactor < 0.6) {
-          // More dramatic from the start
-          distortionStrength = complexityFactor * 1.5;
-        } else if (complexityFactor < 0.85) {
-          // Much stronger
-          distortionStrength = 0.9 + (complexityFactor - 0.6) * 2.5;
-        } else {
-          // Maximum drama
-          distortionStrength = 2.5;
-        }
-        
+        // Apply permanent distortion to this segment
+        const distortionStrength = 0.5 + complexityFactor * 1.5;
         const resistance = 1 - (metadata.decisiveness * 0.2);
         
-        distortedPath.forEach((point, idx) => {
+        for (let idx = startIdx; idx < endIdx; idx++) {
           const originalPoint = path[idx];
-          if (!originalPoint) return;
+          if (!originalPoint || distortedPath[idx].distorted) continue; // Skip already distorted
           
-          // Much more dramatic wave-like distortion
-          const waveAmplitude = 40 * distortionStrength; // Increased from 15
-          const waveFrequency = 0.08; // Slower, longer waves
-          const waveX = Math.sin(idx * waveFrequency + time * 0.5) * waveAmplitude;
-          const waveY = Math.cos(idx * waveFrequency * 1.3 + time * 0.5) * waveAmplitude * 0.8;
+          const t = (idx - startIdx) / segmentLength;
+          const curveFactor = Math.sin(t * Math.PI); // Smooth curve in middle of segment
           
-          // Add secondary wave for more complex curves
-          const wave2X = Math.sin(idx * waveFrequency * 2 + time * 0.3) * waveAmplitude * 0.5;
-          const wave2Y = Math.cos(idx * waveFrequency * 2.5 + time * 0.3) * waveAmplitude * 0.4;
+          // Apply permanent wave distortion
+          const waveAmplitude = 40 * distortionStrength * curveFactor;
+          const randomAngle = Math.random() * Math.PI * 2;
+          const waveX = Math.cos(randomAngle) * waveAmplitude;
+          const waveY = Math.sin(randomAngle) * waveAmplitude;
           
-          // Noise-based organic movement (also increased)
+          // Apply permanent noise
           const noiseDistortion = noiseRef.current(
-            originalPoint.x * 0.01 + time * 0.3, 
+            originalPoint.x * 0.01, 
             originalPoint.y * 0.01
-          ) * distortionStrength * 35; // Increased from 20
+          ) * distortionStrength * 30 * curveFactor;
           
-          // Apply dramatic distortion
-          point.x = originalPoint.x + (waveX + wave2X + noiseDistortion * 0.7) * resistance;
-          point.y = originalPoint.y + (waveY + wave2Y + noiseDistortion) * resistance;
+          // PERMANENT change - stored and never recalculated
+          distortedPath[idx].x = originalPoint.x + (waveX + noiseDistortion * 0.7) * resistance;
+          distortedPath[idx].y = originalPoint.y + (waveY + noiseDistortion) * resistance;
+          distortedPath[idx].distorted = true; // Mark as permanently changed
+          
+          // Erosion only at very high complexity
+          if (complexityFactor > 0.85 && Math.random() < 0.1) {
+            distortedPath[idx].eroded = true;
+          }
+        }
+        
+        lastDistortionEventRef.current = time;
+        console.log(`Unknown distorted line ${randomIndex}, segment ${startIdx}-${endIdx}`);
+      }
           
           // Only erode at VERY high complexity (>85%)
           if (complexityFactor > 0.85) {
