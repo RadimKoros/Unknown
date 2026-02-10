@@ -211,8 +211,70 @@ function GameCanvas2D() {
       // Update and draw particles
       const allPaths = [...drawnPaths];
       if (currentPath && currentPath.length > 0) {
-        allPaths.push(currentPath);
+        allPaths.push({ points: currentPath, id: 'current' });
       }
+      
+      // Create distorted versions of paths based on complexity and particle proximity
+      allPaths.forEach(pathObj => {
+        const path = pathObj.points || pathObj;
+        const pathId = pathObj.id || 'legacy';
+        const metadata = pathMetadataRef.current.get(pathId) || { decisiveness: 0.5, intensity: 0.5 };
+        
+        if (!distortedPathsRef.current.has(pathId)) {
+          distortedPathsRef.current.set(pathId, path.map(p => ({ ...p })));
+        }
+        
+        const distortedPath = distortedPathsRef.current.get(pathId);
+        
+        // Apply unknown's influence on the known lines
+        const complexityFactor = complexity / MAX_COMPLEXITY;
+        const backLashStrength = complexityFactor * metadata.intensity * 0.5;
+        
+        distortedPath.forEach((point, idx) => {
+          const originalPoint = path[idx];
+          if (!originalPoint) return;
+          
+          // Calculate particle density around this point
+          let nearbyParticles = 0;
+          let forceX = 0;
+          let forceY = 0;
+          
+          particlesRef.current.forEach(particle => {
+            const dx = particle.x - originalPoint.x;
+            const dy = particle.y - originalPoint.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < INFLUENCE_RADIUS * 0.8) {
+              nearbyParticles++;
+              // Particles push the line points
+              const pushForce = (1 - distance / (INFLUENCE_RADIUS * 0.8)) * backLashStrength;
+              forceX -= (dx / distance) * pushForce * 2;
+              forceY -= (dy / distance) * pushForce * 2;
+            }
+          });
+          
+          // Add noise-based distortion (unknown's chaos)
+          const noiseDistortion = noiseRef.current(
+            originalPoint.x * 0.01 + time * 0.5, 
+            originalPoint.y * 0.01
+          ) * backLashStrength * 30;
+          
+          // Decisive lines resist more, but still get affected
+          const resistance = 1 - (metadata.decisiveness * 0.5);
+          
+          // Apply distortion
+          point.x = originalPoint.x + (forceX + noiseDistortion) * resistance;
+          point.y = originalPoint.y + (forceY + noiseDistortion * 0.5) * resistance;
+          
+          // Add erosion effect at high complexity
+          if (complexityFactor > 0.6) {
+            const erosion = Math.random() < complexityFactor * 0.1;
+            if (erosion) {
+              point.eroded = true;
+            }
+          }
+        });
+      });
       
       particlesRef.current.forEach(particle => {
         // Noise-based movement
