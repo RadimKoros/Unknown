@@ -34,8 +34,8 @@ function HUD() {
     const interval = setInterval(() => {
       updateSurvivalTime();
       
-      // Check if game should end due to complexity
-      if (complexity >= 95) {
+      // Game over only at MAXIMUM complexity, not 95%
+      if (complexity >= 100) {
         useGameStore.getState().endGame();
       }
     }, 100);
