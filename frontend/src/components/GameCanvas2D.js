@@ -236,6 +236,8 @@ function GameCanvas2D() {
       
       // Create distorted versions of paths based on complexity (only for completed paths)
       const completedPaths = drawnPaths;
+      
+      completedPaths.forEach(pathObj => {
         const path = pathObj.points || pathObj;
         const pathId = pathObj.id || 'legacy';
         const metadata = pathMetadataRef.current.get(pathId) || { decisiveness: 0.5, intensity: 0.5 };
