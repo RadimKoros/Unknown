@@ -370,8 +370,8 @@ function GameCanvas2D() {
         }
       }
       
-      // Generate unknown's response curves at intervals
-      if (time - lastCurveGenerationRef.current > 3 && complexity > 20 && complexity < 90) {
+      // Generate unknown's response curves - starts earlier now
+      if (time - lastCurveGenerationRef.current > 3 && complexity > 5 && complexity < 90) {
         const complexityFactor = complexity / MAX_COMPLEXITY;
         
         // Pick a random existing path to extend from
