@@ -83,7 +83,9 @@ const useGameStore = create((set, get) => ({
   
   toggleHudMinimized: () => set((state) => ({ hudMinimized: !state.hudMinimized })),
   
-  setHudPosition: (position) => set({ hudPosition: position })
+  setHudPosition: (position) => set({ hudPosition: position }),
+  
+  setComplexitySensitivity: (value) => set({ complexitySensitivity: value })
 }));
 
 export default useGameStore;
