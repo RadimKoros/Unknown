@@ -33,9 +33,8 @@ function GameCanvas2D() {
   const distortedPathsRef = useRef(new Map()); // Store permanently distorted versions of paths
   const pathMetadataRef = useRef(new Map()); // Store metadata about each path
   const pathBehaviorRef = useRef(new Map()); // Store behavior type for each path
-  const unknownCurvesRef = useRef([]); // Curves created by the unknown field
-  const lastCurveGenerationRef = useRef(0);
-  const lastDistortionEventRef = useRef(0); // Track when last distortion event occurred
+  const fragmentedLinesRef = useRef([]); // Separated line fragments
+  const lastFragmentationRef = useRef(0);
   
   // Export canvas function
   useEffect(() => {
