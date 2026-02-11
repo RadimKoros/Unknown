@@ -353,51 +353,68 @@ function GameCanvas2D() {
         }
       }
       
-      // Generate unknown's response curves - starts earlier now
-      if (time - lastCurveGenerationRef.current > 3 && complexity > 5 && complexity < 90) {
-        const complexityFactor = complexity / MAX_COMPLEXITY;
+      // LINE FRAGMENTATION - pieces of lines break off and separate
+      const fragmentationInterval = Math.max(2, 5 - complexityFactor * 3);
+      
+      if (time - lastFragmentationRef.current > fragmentationInterval && completedPaths.length > 0 && complexityFactor > 0.1) {
+        // Pick a random line to fragment
+        const pathObj = completedPaths[Math.floor(Math.random() * completedPaths.length)];
+        const path = pathObj.points || pathObj;
+        const pathId = pathObj.id || 'legacy';
         
-        // Pick a random existing path to extend from
-        if (allPaths.length > 0 && Math.random() < complexityFactor * 0.4) {
-          const randomPathObj = allPaths[Math.floor(Math.random() * allPaths.length)];
-          const randomPath = randomPathObj.points || randomPathObj;
+        if (path.length > 10) {
+          // Pick a random segment to break off
+          const segmentLength = Math.floor(path.length * (0.15 + Math.random() * 0.25)); // 15-40% of line
+          const startIdx = Math.floor(Math.random() * (path.length - segmentLength));
+          const endIdx = startIdx + segmentLength;
           
-          if (randomPath.length > 5) {
-            // Pick a point to branch from (prefer middle-to-end sections)
-            const branchIdx = Math.floor(randomPath.length * (0.3 + Math.random() * 0.5));
-            const branchPoint = randomPath[branchIdx];
-            
-            // Create a curved extension
-            const curvePoints = [{ ...branchPoint }];
-            const curveLength = 5 + Math.floor(Math.random() * 8);
-            const angleOffset = (Math.random() - 0.5) * Math.PI * 0.8;
-            
-            for (let i = 1; i <= curveLength; i++) {
-              const t = i / curveLength;
-              const angle = angleOffset + Math.sin(t * Math.PI) * 0.5;
-              const distance = t * 80 * (0.5 + complexityFactor * 0.5);
-              
-              curvePoints.push({
-                x: branchPoint.x + Math.cos(angle) * distance,
-                y: branchPoint.y + Math.sin(angle) * distance
-              });
-            }
-            
-            unknownCurvesRef.current.push({
-              points: curvePoints,
-              createdAt: time,
-              connected: false,
-              intensity: complexityFactor
-            });
-            
-            lastCurveGenerationRef.current = time;
+          // Extract the segment
+          const fragmentPoints = [];
+          for (let i = startIdx; i < endIdx; i++) {
+            fragmentPoints.push({ ...path[i] });
           }
+          
+          // Create fragment with drift
+          const driftAngle = Math.random() * Math.PI * 2;
+          const driftDistance = 20 + Math.random() * 40;
+          const driftX = Math.cos(driftAngle) * driftDistance;
+          const driftY = Math.sin(driftAngle) * driftDistance;
+          
+          fragmentedLinesRef.current.push({
+            points: fragmentPoints,
+            offset: { x: driftX, y: driftY },
+            createdAt: time,
+            isDashed: true,
+            dashProgress: 0
+          });
+          
+          // Mark the original segment as fragmented
+          const distortedPath = distortedPathsRef.current.get(pathId);
+          if (distortedPath) {
+            for (let i = startIdx; i < endIdx; i++) {
+              if (distortedPath[i]) {
+                distortedPath[i].fragmented = true;
+              }
+            }
+          }
+          
+          lastFragmentationRef.current = time;
+          console.log(`Line ${pathId} fragmented, segment ${startIdx}-${endIdx} separated`);
         }
       }
       
-      // Clean up old connected curves
-      unknownCurvesRef.current = unknownCurvesRef.current.filter(curve => 
-        !curve.connected || (time - curve.createdAt < 5)
+      // Update fragment positions (they drift away)
+      fragmentedLinesRef.current.forEach(fragment => {
+        const age = time - fragment.createdAt;
+        const driftSpeed = 0.3;
+        fragment.offset.x += Math.cos(age * 0.5) * driftSpeed;
+        fragment.offset.y += Math.sin(age * 0.5) * driftSpeed;
+        fragment.dashProgress = (age * 0.5) % 1;
+      });
+      
+      // Remove old fragments
+      fragmentedLinesRef.current = fragmentedLinesRef.current.filter(f => 
+        time - f.createdAt < 15
       );
       
       particlesRef.current.forEach(particle => {
