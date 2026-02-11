@@ -22,10 +22,13 @@ function HUD() {
     hudMinimized,
     toggleHudMinimized,
     hudPosition,
-    setHudPosition
+    setHudPosition,
+    complexitySensitivity,
+    setComplexitySensitivity
   } = useGameStore();
 
   const [isDragging, setIsDragging] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const dragRef = useRef({ startX: 0, startY: 0, initialX: 0, initialY: 0 });
 
   useEffect(() => {
