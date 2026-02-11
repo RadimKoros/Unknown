@@ -240,69 +240,134 @@ function GameCanvas2D() {
         allPaths.push({ points: currentPath, id: 'current' });
       }
       
-      // Create distorted versions of paths - PERMANENT changes triggered randomly
+      // Hybrid distortion system: Some lines animate, some stop permanently
       const completedPaths = drawnPaths;
       const complexityFactor = complexity / MAX_COMPLEXITY;
       
-      // Trigger random distortion events based on complexity
-      const distortionInterval = Math.max(1, 5 - complexityFactor * 4); // More frequent at high complexity
+      // Assign behavior to new paths
+      completedPaths.forEach(pathObj => {
+        const pathId = pathObj.id || 'legacy';
+        if (!pathBehaviorRef.current.has(pathId)) {
+          const behavior = {
+            type: Math.random() < 0.5 ? 'animate' : 'permanent', // 50/50 split
+            intensity: Math.random(), // How much it moves
+            frozen: false, // Animated lines can freeze
+            frozenAt: 0
+          };
+          pathBehaviorRef.current.set(pathId, behavior);
+        }
+      });
       
-      if (time - lastDistortionEventRef.current > distortionInterval && completedPaths.length > 0) {
-        // Pick a random line to distort
-        const randomIndex = Math.floor(Math.random() * completedPaths.length);
-        const pathObj = completedPaths[randomIndex];
+      // Randomly freeze some animated lines (they move then stop)
+      if (Math.random() < 0.05 * complexityFactor) { // More frequent at high complexity
+        const animatedPaths = Array.from(pathBehaviorRef.current.entries())
+          .filter(([id, b]) => b.type === 'animate' && !b.frozen);
+        
+        if (animatedPaths.length > 0) {
+          const [pathId, behavior] = animatedPaths[Math.floor(Math.random() * animatedPaths.length)];
+          behavior.frozen = true;
+          behavior.frozenAt = time;
+          console.log(`Line ${pathId} froze in place`);
+        }
+      }
+      
+      // Process distortions based on behavior type
+      completedPaths.forEach(pathObj => {
         const path = pathObj.points || pathObj;
         const pathId = pathObj.id || 'legacy';
-        const metadata = pathMetadataRef.current.get(pathId) || { decisiveness: 0.5, intensity: 0.5 };
+        const metadata = pathMetadataRef.current.get(pathId) || { decisiveness: 0.5 };
+        const behavior = pathBehaviorRef.current.get(pathId) || { type: 'none', intensity: 0 };
         
-        // Initialize distorted path if needed
         if (!distortedPathsRef.current.has(pathId)) {
           distortedPathsRef.current.set(pathId, path.map(p => ({ ...p, distorted: false })));
         }
         
         const distortedPath = distortedPathsRef.current.get(pathId);
         
-        // Pick a random segment of the line (not the whole line)
-        const segmentLength = Math.floor(path.length * (0.2 + Math.random() * 0.4)); // 20-60% of line
-        const startIdx = Math.floor(Math.random() * Math.max(1, path.length - segmentLength));
-        const endIdx = Math.min(startIdx + segmentLength, path.length);
-        
-        // Apply permanent distortion to this segment
-        const distortionStrength = 0.5 + complexityFactor * 1.5;
-        const resistance = 1 - (metadata.decisiveness * 0.2);
-        
-        for (let idx = startIdx; idx < endIdx; idx++) {
-          const originalPoint = path[idx];
-          if (!originalPoint || distortedPath[idx].distorted) continue; // Skip already distorted
+        // Apply distortion based on behavior type
+        if (behavior.type === 'animate' && !behavior.frozen) {
+          // CONTINUOUS ANIMATION - lines that keep moving
+          const animationStrength = (0.5 + complexityFactor) * behavior.intensity;
+          const resistance = 1 - (metadata.decisiveness * 0.2);
           
-          const t = (idx - startIdx) / segmentLength;
-          const curveFactor = Math.sin(t * Math.PI); // Smooth curve in middle of segment
+          distortedPath.forEach((point, idx) => {
+            const originalPoint = path[idx];
+            if (!originalPoint) return;
+            
+            const waveAmplitude = 30 * animationStrength;
+            const waveFreq = 0.1 * (1 + behavior.intensity);
+            const waveX = Math.sin(idx * waveFreq + time * 0.6) * waveAmplitude;
+            const waveY = Math.cos(idx * waveFreq * 1.2 + time * 0.6) * waveAmplitude * 0.7;
+            
+            point.x = originalPoint.x + waveX * resistance;
+            point.y = originalPoint.y + waveY * resistance;
+            point.animated = true;
+          });
           
-          // Apply permanent wave distortion
-          const waveAmplitude = 40 * distortionStrength * curveFactor;
-          const randomAngle = Math.random() * Math.PI * 2;
-          const waveX = Math.cos(randomAngle) * waveAmplitude;
-          const waveY = Math.sin(randomAngle) * waveAmplitude;
-          
-          // Apply permanent noise
-          const noiseDistortion = noiseRef.current(
-            originalPoint.x * 0.01, 
-            originalPoint.y * 0.01
-          ) * distortionStrength * 30 * curveFactor;
-          
-          // PERMANENT change - stored and never recalculated
-          distortedPath[idx].x = originalPoint.x + (waveX + noiseDistortion * 0.7) * resistance;
-          distortedPath[idx].y = originalPoint.y + (waveY + noiseDistortion) * resistance;
-          distortedPath[idx].distorted = true; // Mark as permanently changed
-          
-          // Erosion only at very high complexity
-          if (complexityFactor > 0.85 && Math.random() < 0.1) {
-            distortedPath[idx].eroded = true;
-          }
+        } else if (behavior.type === 'animate' && behavior.frozen) {
+          // FROZEN - was animating, now permanently stopped at last position
+          // Keep whatever position it had when frozen
+          // (Already stored in distortedPath from previous frame)
         }
+      });
+      
+      // PERMANENT DISTORTION EVENTS - happens faster now
+      const distortionInterval = Math.max(0.5, 2 - complexityFactor * 1.5); // Much faster
+      
+      if (time - lastDistortionEventRef.current > distortionInterval && completedPaths.length > 0) {
+        // Pick paths with 'permanent' behavior type
+        const permanentPaths = completedPaths.filter((pathObj, idx) => {
+          const pathId = pathObj.id || 'legacy';
+          const behavior = pathBehaviorRef.current.get(pathId);
+          return behavior && behavior.type === 'permanent';
+        });
         
-        lastDistortionEventRef.current = time;
-        console.log(`Unknown distorted line ${randomIndex}, segment ${startIdx}-${endIdx}`);
+        if (permanentPaths.length > 0) {
+          const pathObj = permanentPaths[Math.floor(Math.random() * permanentPaths.length)];
+          const path = pathObj.points || pathObj;
+          const pathId = pathObj.id || 'legacy';
+          const metadata = pathMetadataRef.current.get(pathId) || { decisiveness: 0.5 };
+          const behavior = pathBehaviorRef.current.get(pathId);
+          
+          const distortedPath = distortedPathsRef.current.get(pathId);
+          
+          // Pick a random segment
+          const segmentLength = Math.floor(path.length * (0.2 + Math.random() * 0.4));
+          const startIdx = Math.floor(Math.random() * Math.max(1, path.length - segmentLength));
+          const endIdx = Math.min(startIdx + segmentLength, path.length);
+          
+          const distortionStrength = (0.8 + complexityFactor * 1.2) * (0.5 + behavior.intensity);
+          const resistance = 1 - (metadata.decisiveness * 0.2);
+          
+          for (let idx = startIdx; idx < endIdx; idx++) {
+            const originalPoint = path[idx];
+            if (!originalPoint || distortedPath[idx].distorted) continue;
+            
+            const t = (idx - startIdx) / segmentLength;
+            const curveFactor = Math.sin(t * Math.PI);
+            
+            const waveAmplitude = 40 * distortionStrength * curveFactor;
+            const randomAngle = Math.random() * Math.PI * 2;
+            const waveX = Math.cos(randomAngle) * waveAmplitude;
+            const waveY = Math.sin(randomAngle) * waveAmplitude;
+            
+            const noiseDistortion = noiseRef.current(
+              originalPoint.x * 0.01, 
+              originalPoint.y * 0.01
+            ) * distortionStrength * 30 * curveFactor;
+            
+            distortedPath[idx].x = originalPoint.x + (waveX + noiseDistortion * 0.7) * resistance;
+            distortedPath[idx].y = originalPoint.y + (waveY + noiseDistortion) * resistance;
+            distortedPath[idx].distorted = true;
+            
+            if (complexityFactor > 0.85 && Math.random() < 0.1) {
+              distortedPath[idx].eroded = true;
+            }
+          }
+          
+          lastDistortionEventRef.current = time;
+          console.log(`Permanent distortion on line ${pathId}, segment ${startIdx}-${endIdx}`);
+        }
       }
       
       // Generate unknown's response curves at intervals
