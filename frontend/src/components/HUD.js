@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useGameStore from '../stores/gameStore';
 import ComplexityMeter from './ComplexityMeter';
-import { PlayCircle, PauseCircle, RotateCcw, Trophy, Minimize2, Maximize2, Move, Download } from 'lucide-react';
+import { PlayCircle, PauseCircle, RotateCcw, Trophy, Minimize2, Maximize2, Move, Download, Settings } from 'lucide-react';
 
 function HUD() {
   const {
