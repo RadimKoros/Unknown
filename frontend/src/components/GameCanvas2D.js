@@ -479,9 +479,9 @@ function GameCanvas2D() {
         if (particle.y > canvas.height) particle.y = 0;
         if (particle.y < 0) particle.y = canvas.height;
         
-        // Draw particle
+        // Draw particle with larger size for performance
         ctx.fillStyle = influenced ? 'rgba(112, 120, 130, 0.6)' : 'rgba(224, 232, 240, 0.8)';
-        ctx.fillRect(particle.x, particle.y, 2, 2);
+        ctx.fillRect(particle.x - 1, particle.y - 1, 3, 3); // Increased from 2x2 to 3x3
       });
       
       // Draw paths - use permanently distorted versions where they exist
