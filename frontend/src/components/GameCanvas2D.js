@@ -428,14 +428,24 @@ function GameCanvas2D() {
         let totalForceY = noiseY * 0.1;
         let influenced = false;
         
-        // Repulsion from drawn paths
-        allPaths.forEach(pathObj => {
+        // Optimized: Only check paths within reasonable distance
+        const checkRadius = INFLUENCE_RADIUS * 1.2;
+        
+        // Repulsion from drawn paths (optimized with early exit)
+        for (let pathIdx = 0; pathIdx < allPaths.length && !influenced; pathIdx++) {
+          const pathObj = allPaths[pathIdx];
           const path = pathObj.points || pathObj;
           const metadata = pathMetadataRef.current.get(pathObj.id) || { decisiveness: 0.5 };
           
-          path.forEach(point => {
+          // Sample every 3rd point for performance
+          for (let i = 0; i < path.length; i += 3) {
+            const point = path[i];
             const dx = particle.x - point.x;
             const dy = particle.y - point.y;
+            
+            // Quick distance check before sqrt
+            if (Math.abs(dx) > checkRadius || Math.abs(dy) > checkRadius) continue;
+            
             const distance = Math.sqrt(dx * dx + dy * dy);
             
             if (distance < INFLUENCE_RADIUS && distance > 1) {
@@ -453,9 +463,10 @@ function GameCanvas2D() {
                 totalForceX += chaos;
                 totalForceY += chaos;
               }
+              break;
             }
-          });
-        });
+          }
+        }
         
         particle.vx = totalForceX;
         particle.vy = totalForceY;
