@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { createNoise2D } from 'simplex-noise';
 import useGameStore from '../stores/gameStore';
 
-const PARTICLE_COUNT = 5000;
+const PARTICLE_COUNT = 2500; // Reduced from 5000 for performance
 const FIELD_SIZE = { width: window.innerWidth, height: window.innerHeight };
 const INFLUENCE_RADIUS = 150;
 const MAX_COMPLEXITY = 100;
