@@ -219,6 +219,15 @@ function HUD() {
             </button>
             
             <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="p-4 rounded-full bg-white/70 backdrop-blur-xl border border-white/20 hover:bg-white/90 transition-all shadow-lg hover:scale-105 active:scale-95"
+              data-testid="settings-button"
+              title="Complexity sensitivity"
+            >
+              <Settings className="w-6 h-6 text-black" />
+            </button>
+            
+            <button
               onClick={handleExportImage}
               className="p-4 rounded-full bg-white/70 backdrop-blur-xl border border-white/20 hover:bg-white/90 transition-all shadow-lg hover:scale-105 active:scale-95"
               data-testid="export-button-gameplay"
@@ -234,6 +243,44 @@ function HUD() {
             >
               <RotateCcw className="w-6 h-6 text-black" />
             </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Sensitivity Settings Panel */}
+      <AnimatePresence>
+        {showSettings && isPlaying && !isGameOver && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="fixed bottom-8 right-32 z-20 bg-white/85 backdrop-blur-xl border border-white/40 shadow-lg rounded-2xl p-6 w-72"
+            data-testid="settings-panel"
+          >
+            <h3 className="text-lg font-bold text-black mb-4 font-['Syne']">Complexity Sensitivity</h3>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm font-['Manrope']">
+                <span className="text-zinc-600">Slower</span>
+                <span className="text-black font-bold">{complexitySensitivity.toFixed(1)}x</span>
+                <span className="text-zinc-600">Faster</span>
+              </div>
+              
+              <input
+                type="range"
+                min="0.5"
+                max="3"
+                step="0.1"
+                value={complexitySensitivity}
+                onChange={(e) => setComplexitySensitivity(parseFloat(e.target.value))}
+                className="w-full h-2 bg-zinc-200 rounded-lg appearance-none cursor-pointer accent-black"
+                data-testid="sensitivity-slider"
+              />
+              
+              <p className="text-xs text-zinc-500 font-['Manrope']">
+                Controls how quickly the unknown responds to your drawings
+              </p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
