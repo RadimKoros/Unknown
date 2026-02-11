@@ -295,8 +295,8 @@ function GameCanvas2D() {
         }
       });
       
-      // PERMANENT DISTORTION EVENTS - happens faster now
-      const distortionInterval = Math.max(0.5, 2 - complexityFactor * 1.5); // Much faster
+      // PERMANENT DISTORTION EVENTS - 40% more frequent
+      const distortionInterval = Math.max(0.3, (2 - complexityFactor * 1.5) / 1.4); // Divided by 1.4 for 40% more frequent
       
       if (time - lastDistortionEventRef.current > distortionInterval && completedPaths.length > 0) {
         // Pick paths with 'permanent' behavior type
