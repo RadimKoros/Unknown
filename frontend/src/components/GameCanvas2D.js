@@ -606,38 +606,6 @@ function GameCanvas2D() {
         ctx.stroke();
       }
       
-      // Draw unknown's response curves
-      ctx.strokeStyle = 'rgba(59, 130, 246, 0.6)'; // Blue tint for unknown's curves
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([5, 5]); // Dashed to distinguish from user's lines
-      
-      unknownCurvesRef.current.forEach(curve => {
-        if (curve.points.length < 2 || curve.connected) return;
-        
-        // Pulsing effect
-        const pulse = 0.4 + Math.sin(time * 2 + curve.createdAt) * 0.2;
-        ctx.globalAlpha = pulse;
-        
-        ctx.beginPath();
-        ctx.moveTo(curve.points[0].x, curve.points[0].y);
-        
-        for (let i = 1; i < curve.points.length; i++) {
-          ctx.lineTo(curve.points[i].x, curve.points[i].y);
-        }
-        
-        ctx.stroke();
-        
-        // Draw connection point indicator
-        const endPoint = curve.points[curve.points.length - 1];
-        ctx.fillStyle = 'rgba(59, 130, 246, 0.8)';
-        ctx.beginPath();
-        ctx.arc(endPoint.x, endPoint.y, 4, 0, Math.PI * 2);
-        ctx.fill();
-      });
-      
-      ctx.setLineDash([]); // Reset dash
-      ctx.globalAlpha = 1;
-      
       animationFrameRef.current = requestAnimationFrame(animate);
     };
     
