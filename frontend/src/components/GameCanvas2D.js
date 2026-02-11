@@ -172,11 +172,14 @@ function GameCanvas2D() {
         const pathWithMeta = { points: currentPath, id: pathId };
         addPath(pathWithMeta);
         
-        // Calculate complexity - slower growth
+        // Calculate complexity - apply sensitivity multiplier
         const totalPoints = drawnPaths.reduce((sum, path) => 
           sum + (path.points ? path.points.length : path.length), 0
         ) + currentPath.length;
-        const newComplexity = Math.min((totalPoints * COMPLEXITY_GROWTH_RATE / 10), MAX_COMPLEXITY);
+        const newComplexity = Math.min(
+          (totalPoints * BASE_COMPLEXITY_GROWTH_RATE * complexitySensitivity / 10), 
+          MAX_COMPLEXITY
+        );
         updateComplexity(newComplexity);
         
         // Award points with bonus for decisive lines
