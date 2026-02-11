@@ -478,7 +478,7 @@ function GameCanvas2D() {
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       
-      // Draw completed paths (with permanent distortions)
+      // Draw completed paths (with permanent distortions and fragmentations)
       drawnPaths.forEach(pathObj => {
         const pathId = pathObj.id || 'legacy';
         const path = pathObj.points || pathObj;
@@ -500,19 +500,44 @@ function GameCanvas2D() {
         
         ctx.globalAlpha = alpha;
         
-        // Draw the path (original or permanently distorted)
+        // Draw the path with gaps for fragmented segments
         ctx.beginPath();
+        ctx.setLineDash([]); // Solid for non-fragmented parts
         
         let isFirstPoint = true;
+        let inFragmentedSection = false;
+        
         for (let i = 0; i < renderPath.length; i++) {
           const point = renderPath[i];
           const originalPoint = renderPath === path ? point : path[i];
           
-          // Use distorted position if available, otherwise original
           const x = point.x !== undefined ? point.x : originalPoint.x;
           const y = point.y !== undefined ? point.y : originalPoint.y;
           
-          // Skip eroded points only at very high complexity
+          // Check if this segment is fragmented (broken off)
+          const isFragmented = point.fragmented;
+          
+          if (isFragmented) {
+            // Draw dashed for fragmented parts still attached
+            if (!inFragmentedSection) {
+              ctx.stroke(); // Finish solid line
+              ctx.beginPath();
+              ctx.setLineDash([5, 5]);
+              inFragmentedSection = true;
+              isFirstPoint = true;
+            }
+          } else {
+            // Back to solid
+            if (inFragmentedSection) {
+              ctx.stroke();
+              ctx.beginPath();
+              ctx.setLineDash([]);
+              inFragmentedSection = false;
+              isFirstPoint = true;
+            }
+          }
+          
+          // Skip eroded points
           if (point.eroded && Math.random() > 0.3) {
             if (i < renderPath.length - 1) {
               isFirstPoint = true;
@@ -529,8 +554,41 @@ function GameCanvas2D() {
         }
         
         ctx.stroke();
+        ctx.setLineDash([]); // Reset
         ctx.globalAlpha = 1;
       });
+      
+      // Draw separated fragments
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.8;
+      
+      fragmentedLinesRef.current.forEach(fragment => {
+        if (fragment.points.length < 2) return;
+        
+        // Dashed line for fragments
+        ctx.setLineDash([5, 5]);
+        ctx.lineDashOffset = -fragment.dashProgress * 10;
+        
+        ctx.beginPath();
+        ctx.moveTo(
+          fragment.points[0].x + fragment.offset.x,
+          fragment.points[0].y + fragment.offset.y
+        );
+        
+        for (let i = 1; i < fragment.points.length; i++) {
+          ctx.lineTo(
+            fragment.points[i].x + fragment.offset.x,
+            fragment.points[i].y + fragment.offset.y
+          );
+        }
+        
+        ctx.stroke();
+      });
+      
+      ctx.setLineDash([]);
+      ctx.lineDashOffset = 0;
+      ctx.globalAlpha = 1;
       
       // Draw current path being drawn (NO distortion for immediate feedback)
       if (currentPath && currentPath.length > 1) {
