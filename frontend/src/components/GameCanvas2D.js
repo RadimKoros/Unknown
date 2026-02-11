@@ -6,7 +6,7 @@ const PARTICLE_COUNT = 5000;
 const FIELD_SIZE = { width: window.innerWidth, height: window.innerHeight };
 const INFLUENCE_RADIUS = 150;
 const MAX_COMPLEXITY = 100;
-const COMPLEXITY_GROWTH_RATE = 0.5; // Slower growth
+const BASE_COMPLEXITY_GROWTH_RATE = 1.0; // Faster than before
 const CONNECTION_REWARD = 5; // Complexity reduction for connecting to unknown's curves
 
 function GameCanvas2D() {
