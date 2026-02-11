@@ -35,6 +35,7 @@ function GameCanvas2D() {
   const pathBehaviorRef = useRef(new Map()); // Store behavior type for each path
   const fragmentedLinesRef = useRef([]); // Separated line fragments
   const lastFragmentationRef = useRef(0);
+  const lastDistortionEventRef = useRef(0); // For permanent distortions
   
   // Export canvas function
   useEffect(() => {
