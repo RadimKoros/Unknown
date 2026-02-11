@@ -100,22 +100,6 @@ function GameCanvas2D() {
       e.preventDefault();
       isDrawingRef.current = true;
       const pos = getPosition(e);
-      
-      // Check if starting near an unknown curve
-      let connectedToCurve = false;
-      unknownCurvesRef.current.forEach((curve, idx) => {
-        if (curve.points.length > 0) {
-          const endPoint = curve.points[curve.points.length - 1];
-          const distance = Math.hypot(pos.x - endPoint.x, pos.y - endPoint.y);
-          if (distance < 30) {
-            connectedToCurve = true;
-            curve.connected = true;
-            // Reward: reduce complexity
-            updateComplexity(Math.max(0, complexity - CONNECTION_REWARD));
-          }
-        }
-      });
-      
       setCurrentPath([pos]);
     };
     
