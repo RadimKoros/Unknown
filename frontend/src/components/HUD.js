@@ -236,13 +236,13 @@ function HUD() {
               <Download className="w-6 h-6 text-black" />
             </button>
             
-            <button
+          {/*<button
               onClick={resetGame}
               className="p-4 rounded-full bg-white/70 backdrop-blur-xl border border-white/20 hover:bg-white/90 transition-all shadow-lg hover:scale-105 active:scale-95"
               data-testid="reset-button"
             >
               <RotateCcw className="w-6 h-6 text-black" />
-            </button>
+            </button>*/}
           </motion.div>
         )}
       </AnimatePresence>
