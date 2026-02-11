@@ -21,6 +21,9 @@ const useGameStore = create((set, get) => ({
   hudMinimized: false,
   hudPosition: { x: 0, y: 0 },
   
+  // Complexity sensitivity (1.0 = normal, 2.0 = double speed, 0.5 = half speed)
+  complexitySensitivity: 1.0,
+  
   // Actions
   startGame: () => set({ 
     isPlaying: true, 
