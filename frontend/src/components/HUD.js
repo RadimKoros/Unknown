@@ -46,15 +46,17 @@ function HUD() {
     return () => clearInterval(interval);
   }, [isPlaying, isPaused, complexity, updateSurvivalTime]);
 
- const handleStart = async () => {
-  const el = document.documentElement;
+const handleStart = async () => {
+  const canvas = document.querySelector("canvas");
 
-  await el.requestFullscreen?.().catch(() => {});
+  try {
+    await canvas?.requestFullscreen?.();
+  } catch (e) {
+    console.log("Fullscreen failed:", e);
+  }
 
-  setTimeout(() => {
-    startGame();
-    hideInstructions();
-  }, 0);
+  startGame();
+  hideInstructions();
 };
 
   const handleExportImage = () => {
