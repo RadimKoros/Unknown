@@ -46,17 +46,20 @@ function HUD() {
     return () => clearInterval(interval);
   }, [isPlaying, isPaused, complexity, updateSurvivalTime]);
 
-  const handleStart = () => {
+ const handleStart = async () => {
   const el = document.documentElement;
 
-  if (el.requestFullscreen) {
-    el.requestFullscreen().catch(console.error);
-  } else if (el.webkitRequestFullscreen) {
-    el.webkitRequestFullscreen();
+  try {
+    await el.requestFullscreen?.();
+  } catch (e) {
+    console.log("Fullscreen blocked:", e);
   }
 
-  startGame();
-  hideInstructions();
+  // mały delay = utrzymuje user gesture
+  requestAnimationFrame(() => {
+    startGame();
+    hideInstructions();
+  });
 };
 
   const handleExportImage = () => {
