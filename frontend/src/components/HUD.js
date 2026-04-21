@@ -49,17 +49,12 @@ function HUD() {
  const handleStart = async () => {
   const el = document.documentElement;
 
-  try {
-    await el.requestFullscreen?.();
-  } catch (e) {
-    console.log("Fullscreen blocked:", e);
-  }
+  await el.requestFullscreen?.().catch(() => {});
 
-  // mały delay = utrzymuje user gesture
-  requestAnimationFrame(() => {
+  setTimeout(() => {
     startGame();
     hideInstructions();
-  });
+  }, 0);
 };
 
   const handleExportImage = () => {
