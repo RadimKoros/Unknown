@@ -48,6 +48,16 @@ function HUD() {
 
   const handleStart = () => {
     hideInstructions();
+    
+    // FULLSCREEN (ważne: musi być po kliknięciu)
+  const elem = document.documentElement;
+
+  if (elem.requestFullscreen) {
+    elem.requestFullscreen();
+  } else if (elem.webkitRequestFullscreen) {
+    elem.webkitRequestFullscreen();
+  }
+
     startGame();
   };
 
@@ -386,11 +396,18 @@ function HUD() {
                   Play Again
                 </button>
                 <button
-                  onClick={resetGame}
+                  onClick={() => {
+                  // exit fullscreen if active
+                  if (document.fullscreenElement) {
+                  document.exitFullscreen();
+                  }
+
+                  resetGame();
+                    }}
                   className="rounded-full bg-white border border-zinc-200 text-zinc-900 hover:bg-zinc-50 px-8 py-4 text-lg font-medium font-['Syne'] transition-colors"
                   data-testid="main-menu-button"
                 >
-                  Menu
+                  Stop
                 </button>
               </div>
             </motion.div>
