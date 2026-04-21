@@ -47,16 +47,12 @@ function HUD() {
   }, [isPlaying, isPaused, complexity, updateSurvivalTime]);
 
   const handleStart = () => {
-    hideInstructions();
     
     // FULLSCREEN (ważne: musi być po kliknięciu)
-  const elem = document.documentElement;
+ const el = document.documentElement;
 
-  if (elem.requestFullscreen) {
-    elem.requestFullscreen();
-  } else if (elem.webkitRequestFullscreen) {
-    elem.webkitRequestFullscreen();
-  }
+  el.requestFullscreen?.().catch(console.error);
+    hideInstructions();
 
     startGame();
   };
